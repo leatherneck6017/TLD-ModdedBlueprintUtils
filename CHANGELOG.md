@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.1 - 25-Nov-26
+
+### Changed
+
+- `UserData\BlueprintSources.txt` is now written after the first completed blueprint scan of a session, even when nothing was recorded, so a leftover file from a previous session is still cleared. It is no longer rewritten when the game exits.
+- The zero-match pack summary and the "Wrote modded blueprint source map" log line now appear once at that first write instead of at shutdown.
+
+
 ## 1.0.0 - 24-Nov-26
 
 Initial public release of **ModdedBlueprintUtils** (renamed from BlueprintInfo).

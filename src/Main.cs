@@ -84,6 +84,7 @@ namespace ModdedBlueprintUtils
         private static bool _searchedLocalizationGetMethod;
 
         private static string _lastZeroMatchSummary = string.Empty;
+        private static bool _initialReportWritten;
 
         [ThreadStatic]
         private static bool _isInsidePatch;
@@ -250,6 +251,7 @@ namespace ModdedBlueprintUtils
             VanillaBlueprintIds.Clear();
             KnownInstanceKeys.Clear();
             _lastZeroMatchSummary = string.Empty;
+            _initialReportWritten = false;
             _searchedLocalizationGetMethod = false;
             _cachedLocalizationGetMethod = null;
 
@@ -1011,8 +1013,23 @@ namespace ModdedBlueprintUtils
                     KnownInstanceKeys.Add(entry.Key);
                 }
 
-                if (anyRecorded)
+                if (!_initialReportWritten)
+                {
+                    // Skip an empty pre-load pass (lists not ready yet). Once vanilla
+                    // has been snapshotted or any blueprint is visible, write once even
+                    // if nothing was recorded so a stale BlueprintSources.txt is cleared,
+                    // and log the zero-match summary.
+                    if (anyRecorded || VanillaInstanceKeys.Count > 0 || seenInstanceKeys.Count > 0)
+                    {
+                        WriteReportLocked(forceZeroMatchLog: true);
+                        _initialReportWritten = true;
+                        Melon<BlueprintInfoMod>.Logger.Msg($"Wrote modded blueprint source map to {OutputFilePath}");
+                    }
+                }
+                else if (anyRecorded)
+                {
                     WriteReportLocked(forceZeroMatchLog: false);
+                }
             }
         }
 
@@ -1747,15 +1764,6 @@ namespace ModdedBlueprintUtils
             {
                 Melon<BlueprintInfoMod>.Logger.Error($"Failed writing blueprint report: {ex.Message}");
             }
-        }
-
-        public override void OnDeinitializeMelon()
-        {
-            lock (ModdedBlueprintToSource)
-            {
-                WriteReportLocked(forceZeroMatchLog: true);
-            }
-            LoggerInstance.Msg($"Wrote modded blueprint source map to {OutputFilePath}");
         }
     }
 }
