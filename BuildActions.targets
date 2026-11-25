@@ -1,0 +1,15 @@
+﻿<Project>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<!-- 1. Force close TLD and Unity Crash Handler -->
+		<Exec Command="taskkill /F /IM &quot;tld.exe&quot; /T 2&gt;nul &amp; taskkill /F /IM &quot;UnityCrashHandler64.exe&quot; /T 2&gt;nul &amp; exit /b 0" />
+
+		<!-- 2. Actively wait until tld.exe is completely gone from memory -->
+		<Exec Command="powershell -NoProfile -Command &quot;while (Get-Process -Name 'tld' -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 250 }&quot;" />
+
+		<!-- 3. Copy with built-in MSBuild retries (waits 500ms up to 10 times if Defender is scanning) -->
+		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(TLDPath)\Mods\" Retries="10" RetryDelayMilliseconds="500" />
+
+		<!-- 4. Relaunch via Steam -->
+		<Exec Command="start &quot;&quot; &quot;steam://rungameid/305620&quot;" />
+	</Target>
+</Project>
